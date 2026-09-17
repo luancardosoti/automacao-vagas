@@ -49,20 +49,35 @@ export function FluxosPage() {
   const [novoTelefone, setNovoTelefone] = useState('')
   const [disparando, setDisparando] = useState(false)
   const [erroDisparo, setErroDisparo] = useState<string | null>(null)
+  const [erroCarregamento, setErroCarregamento] = useState<string | null>(null)
 
   async function carregarTudo() {
-    const [f, t, d, c, disp] = await Promise.all([
+    // busca cada recurso separadamente: se um endpoint falhar (ex: banco sem
+    // a migração mais recente), os demais continuam carregando normalmente
+    // em vez de deixar a tela inteira vazia por causa de um Promise.all
+    const [f, t, d, c, disp] = await Promise.allSettled([
       api.fluxos.list(),
       api.templates.list(),
       api.documentos.list(),
       api.contatos.list(),
       api.disparos.list(),
     ])
-    setFluxos(f)
-    setTemplates(t)
-    setDocumentos(d)
-    setContatos(c)
-    setDisparos(disp)
+    if (f.status === 'fulfilled') setFluxos(f.value)
+    if (t.status === 'fulfilled') setTemplates(t.value)
+    if (d.status === 'fulfilled') setDocumentos(d.value)
+    if (c.status === 'fulfilled') setContatos(c.value)
+    if (disp.status === 'fulfilled') setDisparos(disp.value)
+
+    const falhas = [f, t, d, c, disp].filter(
+      (r): r is PromiseRejectedResult => r.status === 'rejected',
+    )
+    setErroCarregamento(
+      falhas.length === 0
+        ? null
+        : `Não foi possível carregar: ${falhas
+            .map((r) => (r.reason instanceof Error ? r.reason.message : 'erro desconhecido'))
+            .join('; ')}`,
+    )
   }
 
   useEffect(() => {
@@ -179,6 +194,12 @@ export function FluxosPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {erroCarregamento && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          {erroCarregamento}
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
