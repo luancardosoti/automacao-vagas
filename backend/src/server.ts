@@ -7,6 +7,21 @@ import { whatsappRoutes } from './routes/whatsapp.routes.js'
 
 const app = Fastify({ logger: true })
 
+app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+  if (body === '') {
+    done(null, undefined)
+    return
+  }
+
+  try {
+    done(null, JSON.parse(body as string))
+  } catch (err) {
+    const parsingError = err as Error & { statusCode?: number }
+    parsingError.statusCode = 400
+    done(parsingError, undefined)
+  }
+})
+
 await app.register(cors, { origin: true })
 
 await app.register(templatesRoutes)
