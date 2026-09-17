@@ -4,11 +4,12 @@ import { WhatsappStatusPage } from '@/pages/WhatsappStatus'
 import { EnviarPage } from '@/pages/Enviar'
 import { DocumentosPage } from '@/pages/Documentos'
 import { FluxosPage } from '@/pages/Fluxos'
+import { EmailsPage } from '@/pages/Emails'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, type WhatsappStatus } from '@/lib/api'
 
-type Aba = 'enviar' | 'fluxos' | 'documentos' | 'templates' | 'whatsapp'
+type Aba = 'enviar' | 'fluxos' | 'emails' | 'documentos' | 'templates' | 'whatsapp'
 
 const INTERVALO_STATUS_MS = 30_000
 const MAX_ERROS_CONSECUTIVOS = 3
@@ -64,6 +65,9 @@ export default function App() {
         <Button variant={aba === 'fluxos' ? 'default' : 'outline'} onClick={() => setAba('fluxos')}>
           Fluxos
         </Button>
+        <Button variant={aba === 'emails' ? 'default' : 'outline'} onClick={() => setAba('emails')}>
+          Emails
+        </Button>
         <Button variant={aba === 'documentos' ? 'default' : 'outline'} onClick={() => setAba('documentos')}>
           Documentos
         </Button>
@@ -77,6 +81,7 @@ export default function App() {
 
       {aba === 'enviar' && <EnviarPage />}
       {aba === 'fluxos' && <FluxosPage />}
+      {aba === 'emails' && <EmailsPage />}
       {aba === 'documentos' && <DocumentosPage />}
       {aba === 'templates' && <TemplatesPage />}
       {aba === 'whatsapp' && <WhatsappStatusPage />}

@@ -88,6 +88,22 @@ export type Disparo = {
   contato: Contato
 }
 
+export type EnvioEmail = {
+  id: string
+  nome: string
+  nomeMensagem: string | null
+  destinatario: string
+  assunto: string
+  mensagem: string
+  templateId: string
+  documentoId: string | null
+  status: 'enviado' | 'falhou'
+  erro?: string | null
+  createdAt: string
+  template: Template
+  documento: Documento | null
+}
+
 const BASE = '/api'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -149,5 +165,16 @@ export const api = {
   },
   disparos: {
     list: () => request<Disparo[]>('/disparos'),
+  },
+  emails: {
+    list: () => request<EnvioEmail[]>('/emails'),
+    create: (data: {
+      nome: string
+      nomeMensagem?: string
+      destinatario: string
+      assunto: string
+      templateId: string
+      documentoId?: string
+    }) => request<EnvioEmail>('/emails', { method: 'POST', body: JSON.stringify(data) }),
   },
 }

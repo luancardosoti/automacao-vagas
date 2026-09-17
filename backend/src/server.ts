@@ -7,6 +7,7 @@ import { enviosRoutes } from './routes/envios.routes.js'
 import { whatsappRoutes } from './routes/whatsapp.routes.js'
 import { documentosRoutes } from './routes/documentos.routes.js'
 import { fluxosRoutes } from './routes/fluxos.routes.js'
+import { emailsRoutes } from './routes/emails.routes.js'
 
 const app = Fastify({ logger: true })
 
@@ -34,6 +35,7 @@ await app.register(enviosRoutes)
 await app.register(whatsappRoutes)
 await app.register(documentosRoutes)
 await app.register(fluxosRoutes)
+await app.register(emailsRoutes)
 
 const port = Number(process.env.PORT ?? 3333)
 

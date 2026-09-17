@@ -15,6 +15,7 @@ model Template {
   updatedAt DateTime @updatedAt
   envios    Envio[]
   etapas    FluxoEtapa[]
+  emails    EnvioEmail[]
 }
 
 model Contato {
@@ -50,6 +51,7 @@ model Documento {
   createdAt    DateTime @default(now())
 
   etapas FluxoEtapa[]
+  emails EnvioEmail[]
 }
 
 // Um fluxo é uma sequência de etapas (template, documento ou texto livre)
@@ -89,4 +91,24 @@ model Disparo {
 
   fluxo   Fluxo   @relation(fields: [fluxoId], references: [id])
   contato Contato @relation(fields: [contatoId], references: [id])
+}
+
+// Registro de envio de e-mail de candidatura: template + currículo anexado
+// (opcional) pra um endereço de e-mail, com um nome pra identificar depois
+// (ex: "Vaga frontend empresa X").
+model EnvioEmail {
+  id           String   @id @default(cuid())
+  nome         String // rótulo pra identificar, ex: "Vaga frontend empresa X"
+  nomeMensagem String? // usado no lugar de [nome] no corpo, se o template tiver
+  destinatario String // endereço de e-mail
+  assunto      String
+  mensagem     String // corpo final enviado
+  templateId   String
+  documentoId  String?
+  status       String // enviado | falhou
+  erro         String?
+  createdAt    DateTime @default(now())
+
+  template  Template   @relation(fields: [templateId], references: [id])
+  documento Documento? @relation(fields: [documentoId], references: [id])
 }

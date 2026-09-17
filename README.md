@@ -1,12 +1,13 @@
-# Automação de Vagas — envio de mensagens via WhatsApp
+# Automação de Vagas — candidaturas por WhatsApp e e-mail
 
-Projeto simples para automatizar o disparo de mensagens de candidatura a vagas
-via WhatsApp: você cria templates com `[nome]`, escolhe o contato e o template,
-e o backend dispara a mensagem.
+Projeto simples para automatizar o envio de candidaturas a vagas por WhatsApp
+e e-mail: você cria templates com `[nome]`, escolhe o contato/destinatário e o
+template, e o backend dispara a mensagem (com o currículo anexado, se quiser).
 
 ## Stack
 
-- **Backend:** Fastify + Prisma + SQLite + `zapo-js` (conexão com WhatsApp Web)
+- **Backend:** Fastify + Prisma + SQLite + `zapo-js` (conexão com WhatsApp
+  Web) + Nodemailer (e-mail via Gmail SMTP, veja [EMAIL_SETUP.md](./EMAIL_SETUP.md))
 - **Frontend:** React + Vite + Tailwind + componentes estilo shadcn/ui
 
 ## Estrutura
@@ -58,6 +59,11 @@ Se preferir rodar cada lado separadamente: `npm run dev -w backend` e
    preencha nome + telefone de um novo, confira a pré-visualização da
    mensagem e envie. Todo envio (e todo disparo de fluxo) fica registrado no
    histórico correspondente.
+6. **Emails:** candidate-se por e-mail — nome pra identificar (ex: "Vaga
+   frontend empresa X"), e-mail do destinatário, assunto, um template
+   (os mesmos da aba Templates) e, se quiser, um documento anexado (ex:
+   currículo em PDF). Veja [EMAIL_SETUP.md](./EMAIL_SETUP.md) para configurar
+   o envio (usa Gmail por padrão, mas é fácil trocar de provedor).
 
 ## Sobre o `zapo-js`
 
@@ -68,8 +74,9 @@ SQLite via `@zapo-js/store-sqlite`. A integração está em
 
 ⚠️ **Atenção:** essa biblioteca está em desenvolvimento ativo (lança novas
 versões com frequência) e a API pode mudar entre versões menores. O código
-aqui segue o "Quick Start" oficial da documentação (eventos `auth_qr`,
-`auth_paired`, `disconnected`, e `client.message.send(jid, texto)`). Antes de
+aqui usa os eventos `auth_qr` (QR Code pra parear) e `connection` (status
+`'open'`/`'close'`, cobre tanto o primeiro pareamento quanto reconexões que
+reaproveitam a sessão salva) e `client.message.send(jid, conteúdo)`. Antes de
 rodar em produção, vale a pena conferir a versão instalada contra a
 documentação atual em zapo.to e ajustar nomes de evento/método se algo tiver
 mudado. Se no backend do Everardo vocês já têm um wrapper pronto para o
