@@ -10,8 +10,12 @@
 import { WaClient, ConsoleLogger, createStore } from 'zapo-js'
 import { createSqliteStore } from '@zapo-js/store-sqlite'
 import QRCode from 'qrcode'
+import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 export type WhatsappStatus = 'desconectado' | 'aguardando_qr' | 'conectado'
+
+const AUTH_DB_PATH = '.auth/state.sqlite'
 
 class WhatsappService {
   private client: WaClient | null = null
@@ -25,9 +29,11 @@ class WhatsappService {
   async connect() {
     if (this.client) return this.getStatus()
 
+    mkdirSync(dirname(AUTH_DB_PATH), { recursive: true })
+
     const store = createStore({
       backends: {
-        sqlite: createSqliteStore({ path: '.auth/state.sqlite' }),
+        sqlite: createSqliteStore({ path: AUTH_DB_PATH }),
       },
       providers: {
         auth: 'sqlite',
