@@ -11,3 +11,6 @@
 *backup*
 .env
 *.env*
+backend/uploads/
+*.db
+*.db-journal

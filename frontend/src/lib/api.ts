@@ -29,11 +29,69 @@ export type WhatsappStatus = {
   qrCode: string | null
 }
 
+export type Documento = {
+  id: string
+  nome: string
+  nomeArquivo: string
+  nomeOriginal: string
+  mimetype: string
+  tamanho: number
+  createdAt: string
+}
+
+export type TipoEtapa = 'template' | 'documento' | 'texto'
+
+export type FluxoEtapa = {
+  id: string
+  fluxoId: string
+  ordem: number
+  tipo: TipoEtapa
+  templateId: string | null
+  documentoId: string | null
+  texto: string | null
+  template: Template | null
+  documento: Documento | null
+}
+
+export type Fluxo = {
+  id: string
+  nome: string
+  createdAt: string
+  updatedAt: string
+  etapas: FluxoEtapa[]
+}
+
+export type EtapaInput = {
+  tipo: TipoEtapa
+  templateId?: string | null
+  documentoId?: string | null
+  texto?: string | null
+}
+
+export type ResultadoEtapaDisparo = {
+  ordem: number
+  tipo: TipoEtapa
+  descricao: string
+  status: 'enviado' | 'falhou'
+  erro?: string
+}
+
+export type Disparo = {
+  id: string
+  fluxoId: string
+  contatoId: string
+  status: 'enviado' | 'parcial' | 'falhou'
+  detalhes: string
+  createdAt: string
+  fluxo: Fluxo
+  contato: Contato
+}
+
 const BASE = '/api'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: options?.body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
     ...options,
   })
   if (!res.ok) {
@@ -67,5 +125,28 @@ export const api = {
   whatsapp: {
     status: () => request<WhatsappStatus>('/whatsapp/status'),
     connect: () => request<WhatsappStatus>('/whatsapp/connect', { method: 'POST' }),
+  },
+  documentos: {
+    list: () => request<Documento[]>('/documentos'),
+    upload: (nome: string, arquivo: File) => {
+      const form = new FormData()
+      form.append('nome', nome)
+      form.append('arquivo', arquivo)
+      return request<Documento>('/documentos', { method: 'POST', body: form })
+    },
+    remove: (id: string) => request<void>(`/documentos/${id}`, { method: 'DELETE' }),
+  },
+  fluxos: {
+    list: () => request<Fluxo[]>('/fluxos'),
+    create: (data: { nome: string; etapas: EtapaInput[] }) =>
+      request<Fluxo>('/fluxos', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: { nome: string; etapas: EtapaInput[] }) =>
+      request<Fluxo>(`/fluxos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    remove: (id: string) => request<void>(`/fluxos/${id}`, { method: 'DELETE' }),
+    disparar: (id: string, contatoId: string) =>
+      request<Disparo>(`/fluxos/${id}/disparar`, { method: 'POST', body: JSON.stringify({ contatoId }) }),
+  },
+  disparos: {
+    list: () => request<Disparo[]>('/disparos'),
   },
 }

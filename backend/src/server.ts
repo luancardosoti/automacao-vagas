@@ -1,9 +1,12 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import multipart from '@fastify/multipart'
 import { templatesRoutes } from './routes/templates.routes.js'
 import { contatosRoutes } from './routes/contatos.routes.js'
 import { enviosRoutes } from './routes/envios.routes.js'
 import { whatsappRoutes } from './routes/whatsapp.routes.js'
+import { documentosRoutes } from './routes/documentos.routes.js'
+import { fluxosRoutes } from './routes/fluxos.routes.js'
 
 const app = Fastify({ logger: true })
 
@@ -23,11 +26,14 @@ app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, 
 })
 
 await app.register(cors, { origin: true })
+await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024 } })
 
 await app.register(templatesRoutes)
 await app.register(contatosRoutes)
 await app.register(enviosRoutes)
 await app.register(whatsappRoutes)
+await app.register(documentosRoutes)
+await app.register(fluxosRoutes)
 
 const port = Number(process.env.PORT ?? 3333)
 

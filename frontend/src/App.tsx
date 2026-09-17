@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { TemplatesPage } from '@/pages/Templates'
 import { WhatsappStatusPage } from '@/pages/WhatsappStatus'
 import { EnviarPage } from '@/pages/Enviar'
+import { DocumentosPage } from '@/pages/Documentos'
+import { FluxosPage } from '@/pages/Fluxos'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, type WhatsappStatus } from '@/lib/api'
 
-type Aba = 'enviar' | 'templates' | 'whatsapp'
+type Aba = 'enviar' | 'fluxos' | 'documentos' | 'templates' | 'whatsapp'
 
 export default function App() {
   const [aba, setAba] = useState<Aba>('enviar')
@@ -28,9 +30,15 @@ export default function App() {
         </Badge>
       </header>
 
-      <nav className="mb-6 flex gap-2">
+      <nav className="mb-6 flex flex-wrap gap-2">
         <Button variant={aba === 'enviar' ? 'default' : 'outline'} onClick={() => setAba('enviar')}>
           Enviar
+        </Button>
+        <Button variant={aba === 'fluxos' ? 'default' : 'outline'} onClick={() => setAba('fluxos')}>
+          Fluxos
+        </Button>
+        <Button variant={aba === 'documentos' ? 'default' : 'outline'} onClick={() => setAba('documentos')}>
+          Documentos
         </Button>
         <Button variant={aba === 'templates' ? 'default' : 'outline'} onClick={() => setAba('templates')}>
           Templates
@@ -41,6 +49,8 @@ export default function App() {
       </nav>
 
       {aba === 'enviar' && <EnviarPage />}
+      {aba === 'fluxos' && <FluxosPage />}
+      {aba === 'documentos' && <DocumentosPage />}
       {aba === 'templates' && <TemplatesPage />}
       {aba === 'whatsapp' && <WhatsappStatusPage />}
     </div>

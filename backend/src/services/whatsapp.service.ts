@@ -79,9 +79,31 @@ class WhatsappService {
     if (!this.client || this.status !== 'conectado') {
       throw new Error('WhatsApp não está conectado. Conecte antes de enviar mensagens.')
     }
-    const digitos = telefone.replace(/\D/g, '')
-    const remoteJid = `${digitos}@s.whatsapp.net`
+    const remoteJid = this.paraRemoteJid(telefone)
     await this.client.message.send(remoteJid, mensagem)
+  }
+
+  async sendDocument(
+    telefone: string,
+    arquivo: Buffer,
+    opcoes: { mimetype: string; fileName: string; caption?: string },
+  ) {
+    if (!this.client || this.status !== 'conectado') {
+      throw new Error('WhatsApp não está conectado. Conecte antes de enviar mensagens.')
+    }
+    const remoteJid = this.paraRemoteJid(telefone)
+    await this.client.message.send(remoteJid, {
+      type: 'document',
+      media: arquivo,
+      mimetype: opcoes.mimetype,
+      fileName: opcoes.fileName,
+      caption: opcoes.caption,
+    })
+  }
+
+  private paraRemoteJid(telefone: string) {
+    const digitos = telefone.replace(/\D/g, '')
+    return `${digitos}@s.whatsapp.net`
   }
 }
 
