@@ -10,17 +10,29 @@ const LABELS: Record<WhatsappStatus['status'], string> = {
   conectado: 'Conectado',
 }
 
+const INTERVALO_STATUS_MS = 30_000
+
 export function WhatsappStatusPage() {
   const [status, setStatus] = useState<WhatsappStatus>({ status: 'desconectado', qrCode: null })
   const [conectando, setConectando] = useState(false)
+  const [atualizando, setAtualizando] = useState(false)
 
   async function atualizar() {
     setStatus(await api.whatsapp.status())
   }
 
+  async function atualizarManual() {
+    setAtualizando(true)
+    try {
+      await atualizar()
+    } finally {
+      setAtualizando(false)
+    }
+  }
+
   useEffect(() => {
     atualizar()
-    const interval = setInterval(atualizar, 3000)
+    const interval = setInterval(atualizar, INTERVALO_STATUS_MS)
     return () => clearInterval(interval)
   }, [])
 
@@ -40,7 +52,12 @@ export function WhatsappStatusPage() {
         <CardTitle>Conexão com o WhatsApp</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
-        <Badge variant={status.status === 'conectado' ? 'default' : 'muted'}>{LABELS[status.status]}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={status.status === 'conectado' ? 'default' : 'muted'}>{LABELS[status.status]}</Badge>
+          <Button size="sm" variant="outline" onClick={atualizarManual} disabled={atualizando}>
+            {atualizando ? 'Atualizando...' : 'Atualizar'}
+          </Button>
+        </div>
 
         {status.status === 'aguardando_qr' && status.qrCode && (
           <img src={status.qrCode} alt="QR Code do WhatsApp" className="h-56 w-56 rounded-md border border-border" />
