@@ -2,10 +2,15 @@
  * Camada fina sobre o zapo-js (pacote npm "zapo-js").
  *
  * IMPORTANTE: zapo-js está em desenvolvimento ativo e a API pode mudar entre
- * versões menores. Os nomes de eventos e métodos abaixo (auth_qr, auth_paired,
- * disconnected, client.message.send) seguem o quick start da documentação
- * oficial em https://zapo.to — confira lá antes de subir em produção, e ajuste
- * aqui caso a versão instalada tenha renomeado algo.
+ * versões menores. Os nomes de eventos e métodos abaixo (auth_qr, connection,
+ * client.message.send) seguem a documentação oficial em https://zapo.to —
+ * confira lá antes de subir em produção, e ajuste aqui caso a versão
+ * instalada tenha renomeado algo.
+ *
+ * O evento `auth_paired` só dispara no primeiro pareamento via QR; numa
+ * reconexão que reaproveita a sessão salva (resume) ele nunca é emitido de
+ * novo. Por isso usamos `connection` (status 'open'/'close') para status
+ * conectado/desconectado — ele cobre os dois casos.
  */
 import { WaClient, ConsoleLogger, createStore } from 'zapo-js'
 import { createSqliteStore } from '@zapo-js/store-sqlite'
@@ -55,20 +60,23 @@ class WhatsappService {
       new ConsoleLogger('info'),
     )
 
-    this.client.on('auth_qr', async ({ qr }: { qr: string }) => {
+    this.client.on('auth_qr', async ({ qr }) => {
       this.status = 'aguardando_qr'
       this.qrCodeDataUrl = await QRCode.toDataURL(qr)
     })
 
-    this.client.on('auth_paired', () => {
-      this.status = 'conectado'
-      this.qrCodeDataUrl = null
-    })
-
-    this.client.on('disconnected', () => {
-      this.status = 'desconectado'
-      this.qrCodeDataUrl = null
-      this.client = null
+    this.client.on('connection', (event) => {
+      if (event.status === 'open') {
+        this.status = 'conectado'
+        this.qrCodeDataUrl = null
+      } else {
+        this.status = 'desconectado'
+        this.qrCodeDataUrl = null
+        // o client do zapo-js não reconecta sozinho depois de um close —
+        // descarta a instância pra que o próximo connect() (botão
+        // "Conectar" na tela) crie um client novo e tente de novo
+        this.client = null
+      }
     })
 
     await this.client.connect()
