@@ -17,6 +17,8 @@ export function EnviarPage() {
   const [templateId, setTemplateId] = useState('')
   const [contatoExistenteId, setContatoExistenteId] = useState('')
   const [novoNome, setNovoNome] = useState('')
+  const [novoNomeMensagem, setNovoNomeMensagem] = useState('')
+  const [nomeMensagemEditadoManualmente, setNomeMensagemEditadoManualmente] = useState(false)
   const [novoTelefone, setNovoTelefone] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -47,13 +49,28 @@ export function EnviarPage() {
   const templateSelecionado = templates.find((t) => t.id === templateId)
 
   const previaNome = useMemo(() => {
-    if (contatoExistenteId) return contatos.find((c) => c.id === contatoExistenteId)?.nome ?? ''
-    return novoNome
-  }, [contatoExistenteId, novoNome, contatos])
+    if (contatoExistenteId) {
+      const c = contatos.find((c) => c.id === contatoExistenteId)
+      return c?.nomeMensagem || c?.nome || ''
+    }
+    return novoNomeMensagem || novoNome
+  }, [contatoExistenteId, novoNome, novoNomeMensagem, contatos])
 
   const previaMensagem = templateSelecionado
     ? templateSelecionado.texto.replaceAll('[nome]', previaNome || '[nome]')
     : ''
+
+  function onChangeNovoNome(value: string) {
+    setNovoNome(value)
+    if (!nomeMensagemEditadoManualmente) {
+      setNovoNomeMensagem(value.trim().split(/\s+/)[0] ?? '')
+    }
+  }
+
+  function onChangeNovoNomeMensagem(value: string) {
+    setNovoNomeMensagem(value)
+    setNomeMensagemEditadoManualmente(true)
+  }
 
   async function enviar() {
     setErro(null)
@@ -64,11 +81,17 @@ export function EnviarPage() {
         if (!novoNome || !novoTelefone) {
           throw new Error('Informe nome e telefone do contato, ou selecione um contato existente')
         }
-        const novoContato = await api.contatos.create({ nome: novoNome, telefone: novoTelefone })
+        const novoContato = await api.contatos.create({
+          nome: novoNome,
+          telefone: novoTelefone,
+          nomeMensagem: novoNomeMensagem || undefined,
+        })
         contatoId = novoContato.id
       }
       await api.envios.create({ templateId, contatoId })
       setNovoNome('')
+      setNovoNomeMensagem('')
+      setNomeMensagemEditadoManualmente(false)
       setNovoTelefone('')
       setContatoExistenteId('')
       setTemplateId('')
@@ -132,10 +155,22 @@ export function EnviarPage() {
             {!contatoExistenteId && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <Label>Nome da pessoa</Label>
-                  <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Ex: Maria" />
+                  <Label>Nome (pra você identificar)</Label>
+                  <Input
+                    value={novoNome}
+                    onChange={(e) => onChangeNovoNome(e.target.value)}
+                    placeholder="Ex: Maria - recrutadora XPTO"
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Label>Nome na mensagem</Label>
+                  <Input
+                    value={novoNomeMensagem}
+                    onChange={(e) => onChangeNovoNomeMensagem(e.target.value)}
+                    placeholder="Ex: Maria"
+                  />
+                </div>
+                <div className="col-span-2 flex flex-col gap-1">
                   <Label>Telefone (com DDI e DDD)</Label>
                   <Input
                     value={novoTelefone}

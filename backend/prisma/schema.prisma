@@ -18,12 +18,13 @@ model Template {
 }
 
 model Contato {
-  id        String   @id @default(cuid())
-  nome      String
-  telefone  String // ex: 55DDDNUMERO, apenas dígitos
-  createdAt DateTime @default(now())
-  envios    Envio[]
-  disparos  Disparo[]
+  id           String   @id @default(cuid())
+  nome         String // nome de identificação, ex: "Maria - recrutadora XPTO"
+  nomeMensagem String? // nome usado no lugar de [nome] na mensagem; se vazio, usa `nome`
+  telefone     String // ex: 55DDDNUMERO, apenas dígitos
+  createdAt    DateTime @default(now())
+  envios       Envio[]
+  disparos     Disparo[]
 }
 
 model Envio {

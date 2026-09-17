@@ -127,7 +127,7 @@ export const fluxosRoutes: FastifyPluginAsync = async (app) => {
       for (const etapa of fluxo.etapas) {
         try {
           if (etapa.tipo === 'template' && etapa.template) {
-            const mensagem = montarMensagem(etapa.template.texto, contato.nome)
+            const mensagem = montarMensagem(etapa.template.texto, contato.nomeMensagem || contato.nome)
             await whatsappService.sendMessage(contato.telefone, mensagem)
             resultados.push({ ordem: etapa.ordem, tipo: 'template', descricao: etapa.template.nome, status: 'enviado' })
           } else if (etapa.tipo === 'documento' && etapa.documento) {
@@ -138,7 +138,7 @@ export const fluxosRoutes: FastifyPluginAsync = async (app) => {
             })
             resultados.push({ ordem: etapa.ordem, tipo: 'documento', descricao: etapa.documento.nome, status: 'enviado' })
           } else if (etapa.tipo === 'texto' && etapa.texto) {
-            const mensagem = montarMensagem(etapa.texto, contato.nome)
+            const mensagem = montarMensagem(etapa.texto, contato.nomeMensagem || contato.nome)
             await whatsappService.sendMessage(contato.telefone, mensagem)
             resultados.push({ ordem: etapa.ordem, tipo: 'texto', descricao: mensagem.slice(0, 60), status: 'enviado' })
           } else {

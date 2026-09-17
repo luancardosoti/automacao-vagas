@@ -26,7 +26,7 @@ export const enviosRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(404).send({ error: 'Template ou contato não encontrado' })
     }
 
-    const mensagem = montarMensagem(template.texto, contato.nome)
+    const mensagem = montarMensagem(template.texto, contato.nomeMensagem || contato.nome)
 
     try {
       await whatsappService.sendMessage(contato.telefone, mensagem)

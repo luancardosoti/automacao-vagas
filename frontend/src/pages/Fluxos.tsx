@@ -46,6 +46,8 @@ export function FluxosPage() {
   const [fluxoParaDisparar, setFluxoParaDisparar] = useState<string>('')
   const [contatoExistenteId, setContatoExistenteId] = useState('')
   const [novoNome, setNovoNome] = useState('')
+  const [novoNomeMensagem, setNovoNomeMensagem] = useState('')
+  const [nomeMensagemEditadoManualmente, setNomeMensagemEditadoManualmente] = useState(false)
   const [novoTelefone, setNovoTelefone] = useState('')
   const [disparando, setDisparando] = useState(false)
   const [erroDisparo, setErroDisparo] = useState<string | null>(null)
@@ -160,9 +162,24 @@ export function FluxosPage() {
   }
 
   const previaNome = useMemo(() => {
-    if (contatoExistenteId) return contatos.find((c) => c.id === contatoExistenteId)?.nome ?? ''
-    return novoNome
-  }, [contatoExistenteId, novoNome, contatos])
+    if (contatoExistenteId) {
+      const c = contatos.find((c) => c.id === contatoExistenteId)
+      return c?.nomeMensagem || c?.nome || ''
+    }
+    return novoNomeMensagem || novoNome
+  }, [contatoExistenteId, novoNome, novoNomeMensagem, contatos])
+
+  function onChangeNovoNome(value: string) {
+    setNovoNome(value)
+    if (!nomeMensagemEditadoManualmente) {
+      setNovoNomeMensagem(value.trim().split(/\s+/)[0] ?? '')
+    }
+  }
+
+  function onChangeNovoNomeMensagem(value: string) {
+    setNovoNomeMensagem(value)
+    setNomeMensagemEditadoManualmente(true)
+  }
 
   async function disparar() {
     setErroDisparo(null)
@@ -177,11 +194,17 @@ export function FluxosPage() {
         if (!novoNome || !novoTelefone) {
           throw new Error('Informe nome e telefone do contato, ou selecione um contato existente')
         }
-        const novoContato = await api.contatos.create({ nome: novoNome, telefone: novoTelefone })
+        const novoContato = await api.contatos.create({
+          nome: novoNome,
+          telefone: novoTelefone,
+          nomeMensagem: novoNomeMensagem || undefined,
+        })
         contatoId = novoContato.id
       }
       await api.fluxos.disparar(fluxoParaDisparar, contatoId)
       setNovoNome('')
+      setNovoNomeMensagem('')
+      setNomeMensagemEditadoManualmente(false)
       setNovoTelefone('')
       setContatoExistenteId('')
       await carregarTudo()
@@ -406,10 +429,22 @@ export function FluxosPage() {
             {!contatoExistenteId && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <Label>Nome da pessoa</Label>
-                  <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Ex: Maria" />
+                  <Label>Nome (pra você identificar)</Label>
+                  <Input
+                    value={novoNome}
+                    onChange={(e) => onChangeNovoNome(e.target.value)}
+                    placeholder="Ex: Maria - recrutadora XPTO"
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Label>Nome na mensagem</Label>
+                  <Input
+                    value={novoNomeMensagem}
+                    onChange={(e) => onChangeNovoNomeMensagem(e.target.value)}
+                    placeholder="Ex: Maria"
+                  />
+                </div>
+                <div className="col-span-2 flex flex-col gap-1">
                   <Label>Telefone (com DDI e DDD)</Label>
                   <Input
                     value={novoTelefone}

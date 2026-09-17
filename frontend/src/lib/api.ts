@@ -8,6 +8,7 @@ export type Template = {
 export type Contato = {
   id: string
   nome: string
+  nomeMensagem: string | null
   telefone: string
   createdAt: string
 }
@@ -113,7 +114,7 @@ export const api = {
   },
   contatos: {
     list: () => request<Contato[]>('/contatos'),
-    create: (data: { nome: string; telefone: string }) =>
+    create: (data: { nome: string; telefone: string; nomeMensagem?: string }) =>
       request<Contato>('/contatos', { method: 'POST', body: JSON.stringify(data) }),
     remove: (id: string) => request<void>(`/contatos/${id}`, { method: 'DELETE' }),
   },
