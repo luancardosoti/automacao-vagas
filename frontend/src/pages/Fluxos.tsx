@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,6 +23,8 @@ const ROTULO_TIPO: Record<TipoEtapa, string> = {
   documento: 'Documento',
   texto: 'Mensagem livre',
 }
+
+const SEM_CONTATO = '__sem_contato__'
 
 function etapaVazia(): EtapaInput {
   return { tipo: 'texto', texto: '' }
@@ -221,37 +223,56 @@ export function FluxosPage() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Select value={etapa.tipo} onChange={(e) => mudarTipoEtapa(i, e.target.value as TipoEtapa)}>
-                      <option value="texto">Mensagem livre (sem template)</option>
-                      <option value="template">Enviar template</option>
-                      <option value="documento">Enviar documento</option>
+                    <Select value={etapa.tipo} onValueChange={(v) => mudarTipoEtapa(i, v as TipoEtapa)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="texto">Mensagem livre (sem template)</SelectItem>
+                        <SelectItem value="template">Enviar template</SelectItem>
+                        <SelectItem value="documento">Enviar documento</SelectItem>
+                      </SelectContent>
                     </Select>
 
                     {etapa.tipo === 'template' && (
                       <Select
                         value={etapa.templateId ?? ''}
-                        onChange={(e) => atualizarEtapa(i, { templateId: e.target.value })}
+                        onValueChange={(v) => atualizarEtapa(i, { templateId: v })}
                       >
-                        <option value="">Selecione um template</option>
-                        {templates.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.nome}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um template" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {templates.length === 0 && (
+                            <p className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum template cadastrado</p>
+                          )}
+                          {templates.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     )}
 
                     {etapa.tipo === 'documento' && (
                       <Select
                         value={etapa.documentoId ?? ''}
-                        onChange={(e) => atualizarEtapa(i, { documentoId: e.target.value })}
+                        onValueChange={(v) => atualizarEtapa(i, { documentoId: v })}
                       >
-                        <option value="">Selecione um documento</option>
-                        {documentos.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.nome}
-                          </option>
-                        ))}
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um documento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {documentos.length === 0 && (
+                            <p className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum documento cadastrado</p>
+                          )}
+                          {documentos.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     )}
 
@@ -327,25 +348,37 @@ export function FluxosPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <Label>Fluxo</Label>
-              <Select value={fluxoParaDisparar} onChange={(e) => setFluxoParaDisparar(e.target.value)}>
-                <option value="">Selecione um fluxo</option>
-                {fluxos.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.nome} ({f.etapas.length} etapa{f.etapas.length === 1 ? '' : 's'})
-                  </option>
-                ))}
+              <Select value={fluxoParaDisparar} onValueChange={setFluxoParaDisparar}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um fluxo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fluxos.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome} ({f.etapas.length} etapa{f.etapas.length === 1 ? '' : 's'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 
             <div className="flex flex-col gap-1">
               <Label>Contato já cadastrado</Label>
-              <Select value={contatoExistenteId} onChange={(e) => setContatoExistenteId(e.target.value)}>
-                <option value="">-- ou preencha um novo contato abaixo --</option>
-                {contatos.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome} ({c.telefone})
-                  </option>
-                ))}
+              <Select
+                value={contatoExistenteId || SEM_CONTATO}
+                onValueChange={(v) => setContatoExistenteId(v === SEM_CONTATO ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="-- ou preencha um novo contato abaixo --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_CONTATO}>-- ou preencha um novo contato abaixo --</SelectItem>
+                  {contatos.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome} ({c.telefone})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 

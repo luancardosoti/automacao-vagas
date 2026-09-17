@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TemplatesPage } from '@/pages/Templates'
 import { WhatsappStatusPage } from '@/pages/WhatsappStatus'
 import { EnviarPage } from '@/pages/Enviar'
@@ -10,16 +10,43 @@ import { api, type WhatsappStatus } from '@/lib/api'
 
 type Aba = 'enviar' | 'fluxos' | 'documentos' | 'templates' | 'whatsapp'
 
+const INTERVALO_STATUS_MS = 30_000
+const MAX_ERROS_CONSECUTIVOS = 3
+
 export default function App() {
   const [aba, setAba] = useState<Aba>('enviar')
   const [status, setStatus] = useState<WhatsappStatus['status']>('desconectado')
+  const errosConsecutivos = useRef(0)
+  const pollingParado = useRef(false)
+
+  async function consultarStatus() {
+    if (pollingParado.current) return
+    try {
+      const s = await api.whatsapp.status()
+      setStatus(s.status)
+      errosConsecutivos.current = 0
+    } catch {
+      errosConsecutivos.current += 1
+      // depois de falhar 3x seguidas para de bater na API; só volta a
+      // consultar se a pessoa recarregar a página ou abrir a aba de conexão
+      if (errosConsecutivos.current >= MAX_ERROS_CONSECUTIVOS) {
+        pollingParado.current = true
+      }
+    }
+  }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      api.whatsapp.status().then((s) => setStatus(s.status))
-    }, 3000)
+    const interval = setInterval(consultarStatus, INTERVALO_STATUS_MS)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (aba === 'whatsapp') {
+      errosConsecutivos.current = 0
+      pollingParado.current = false
+      consultarStatus()
+    }
+  }, [aba])
 
   return (
     <div className="mx-auto max-w-5xl p-6">

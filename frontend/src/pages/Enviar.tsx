@@ -3,9 +3,11 @@ import { api, type Contato, type Envio, type Template } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+const SEM_CONTATO = '__sem_contato__'
 
 export function EnviarPage() {
   const [templates, setTemplates] = useState<Template[]>([])
@@ -75,28 +77,37 @@ export function EnviarPage() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <Label>Template</Label>
-            <Select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-              <option value="">Selecione um template</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nome}
-                </option>
-              ))}
+            <Select value={templateId} onValueChange={setTemplateId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um template" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-1">
             <Label>Contato já cadastrado</Label>
             <Select
-              value={contatoExistenteId}
-              onChange={(e) => setContatoExistenteId(e.target.value)}
+              value={contatoExistenteId || SEM_CONTATO}
+              onValueChange={(v) => setContatoExistenteId(v === SEM_CONTATO ? '' : v)}
             >
-              <option value="">-- ou preencha um novo contato abaixo --</option>
-              {contatos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome} ({c.telefone})
-                </option>
-              ))}
+              <SelectTrigger>
+                <SelectValue placeholder="-- ou preencha um novo contato abaixo --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_CONTATO}>-- ou preencha um novo contato abaixo --</SelectItem>
+                {contatos.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nome} ({c.telefone})
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
